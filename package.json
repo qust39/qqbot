@@ -1,0 +1,13 @@
+{
+  "name": "qq-bot-studio",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check runtime/generic-bot.js && node --check launch.js && node scripts/privacy-scan.js",
+    "privacy:scan": "node scripts/privacy-scan.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

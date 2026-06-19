@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QQ Bot 工作台</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f5f7fa;
+      color: #1f2933;
+      font: 14px/1.45 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    header {
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 16px;
+      background: #ffffff;
+      border-bottom: 1px solid #d9e0e8;
+    }
+    h1 { margin: 0; font-size: 18px; }
+    h2 { margin: 0 0 10px; font-size: 15px; }
+    main {
+      width: min(1320px, calc(100vw - 20px));
+      margin: 10px auto;
+      display: grid;
+      grid-template-columns: 390px minmax(360px, 1fr) 330px;
+      gap: 10px;
+    }
+    section, .project {
+      background: #ffffff;
+      border: 1px solid #d9e0e8;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .stack { display: grid; gap: 10px; align-content: start; }
+    .form {
+      display: grid;
+      grid-template-columns: 118px 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+    label { color: #526173; }
+    input, select, textarea, button {
+      width: 100%;
+      min-height: 36px;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      background: #ffffff;
+      color: #1f2933;
+      font: inherit;
+      padding: 0 10px;
+    }
+    textarea {
+      min-height: 88px;
+      resize: vertical;
+      padding: 8px 10px;
+    }
+    input[type="file"] { padding: 7px 10px; }
+    input[type="checkbox"] {
+      width: auto;
+      min-height: auto;
+    }
+    button { cursor: pointer; }
+    button.primary { background: #2563eb; border-color: #2563eb; color: #ffffff; }
+    button.good { background: #16855f; border-color: #16855f; color: #ffffff; }
+    button.warn { border-color: #f0b866; color: #8a4b00; }
+    button.danger { border-color: #efb1aa; color: #b42318; }
+    button:disabled { opacity: .55; cursor: wait; }
+    .row { display: flex; gap: 8px; align-items: center; }
+    .row > * { flex: 1; }
+    .inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #526173;
+    }
+    .muted { color: #66788a; font-size: 12px; }
+    .message {
+      min-height: 38px;
+      padding: 9px 10px;
+      border-radius: 7px;
+      background: #edf2f7;
+      color: #425466;
+      white-space: pre-wrap;
+    }
+    .analysis {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .metric {
+      border: 1px solid #d9e0e8;
+      border-radius: 7px;
+      padding: 9px;
+    }
+    .metric strong { display: block; font-size: 17px; }
+    .list {
+      display: grid;
+      gap: 8px;
+    }
+    .project {
+      display: grid;
+      gap: 8px;
+    }
+    .project-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+    }
+    .project-title { font-weight: 700; }
+    .badge {
+      border-radius: 999px;
+      padding: 2px 8px;
+      background: #eef2f7;
+      color: #526173;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .badge.ok { color: #16794c; background: #e8f5ee; }
+    .badge.bad { color: #b42318; background: #fff0ee; }
+    .qr {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+    .qr img {
+      width: 120px;
+      height: 120px;
+      border: 1px solid #d9e0e8;
+      border-radius: 8px;
+      image-rendering: pixelated;
+      background: #ffffff;
+    }
+    pre {
+      margin: 0;
+      max-height: 260px;
+      overflow: auto;
+      padding: 10px;
+      border-radius: 7px;
+      background: #111827;
+      color: #d1d5db;
+      font: 12px/1.5 Consolas, "Cascadia Mono", monospace;
+      white-space: pre-wrap;
+    }
+    @media (max-width: 1080px) {
+      main { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .form, .analysis, .qr { grid-template-columns: 1fr; }
+      header { height: auto; padding: 10px; align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>QQ Bot 工作台</h1>
+    <div class="row" style="max-width: 360px">
+      <button id="startNapcat">启动 NapCat</button>
+      <button id="keepAwake">熄屏不断线</button>
+      <button id="refresh">刷新</button>
+    </div>
+  </header>
+
+  <section id="loginPanel" style="display:none; width:min(520px, calc(100vw - 20px)); margin:10px auto">
+    <h2>访问密码</h2>
+    <div class="row">
+      <input id="accessPassword" type="password" autocomplete="current-password" placeholder="输入工作台访问密码" />
+      <button id="login" class="primary">登录</button>
+    </div>
+    <div id="loginMessage" class="muted" style="margin-top:8px"></div>
+  </section>
+
+  <main>
+    <div class="stack">
+      <section>
+        <h2>API</h2>
+        <div class="form">
+          <label>Provider</label>
+          <select id="provider">
+            <option value="deepseek">DeepSeek</option>
+            <option value="openai">OpenAI</option>
+          </select>
+          <label>API Key</label>
+          <input id="apiKey" type="password" autocomplete="off" placeholder="sk-..." />
+          <label>DeepSeek URL</label>
+          <input id="deepseekBaseUrl" value="https://api.deepseek.com" />
+          <label>DeepSeek 模型</label>
+          <input id="deepseekModel" value="deepseek-v4-pro" />
+          <label>OpenAI 模型</label>
+          <input id="openaiModel" value="gpt-4.1-mini" />
+          <span></span>
+          <label class="inline"><input id="rememberKey" type="checkbox" /> 记住 key</label>
+          <span></span>
+          <button id="saveApi" class="primary">保存 API</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>创建 Bot</h2>
+        <div class="form">
+          <label>聊天记录</label>
+          <input id="chatFile" type="file" accept=".txt,text/plain" />
+          <label>项目名</label>
+          <input id="projectName" placeholder="例如 白 / 宝宝ovo" />
+          <label>项目 ID</label>
+          <input id="slug" placeholder="可留空自动生成" />
+          <label>模拟昵称</label>
+          <input id="targetSpeaker" placeholder="聊天记录里的对方昵称" />
+          <label>你的昵称</label>
+          <input id="counterpartSpeaker" placeholder="聊天记录里的自己昵称" />
+          <label>bot QQ</label>
+          <input id="botQq" placeholder="扫码登录的 QQ 号" />
+          <label>只回复 QQ</label>
+          <input id="allowedPrivateUserIds" placeholder="你的 QQ 号，多个用逗号" />
+          <label>OneBot</label>
+          <input id="onebotWsUrl" value="ws://127.0.0.1:3001" />
+          <span></span>
+          <label class="inline"><input id="overwrite" type="checkbox" /> 覆盖同名项目</label>
+        </div>
+        <textarea id="chatText" placeholder="也可以把 QQChatExporter 的 txt 内容粘贴到这里；不导入也可以，只填下面的自定义资料生成 bot"></textarea>
+        <h2 style="margin-top:12px">自定义资料</h2>
+        <div class="form">
+          <label>性格补充</label>
+          <textarea id="characterNotes" placeholder="例如：外冷内热、容易嘴硬、认真时会解释很多、喜欢短句"></textarea>
+          <label>关键信息</label>
+          <textarea id="keyFacts" placeholder="例如：名字、称呼、重要经历、常玩的游戏、不能忘的事实"></textarea>
+          <label>关系记忆</label>
+          <textarea id="relationshipNotes" placeholder="例如：你们怎么相处、常见矛盾、和好方式、特殊称呼"></textarea>
+          <label>说话风格</label>
+          <textarea id="speakingStyle" placeholder="例如：少用标点、多用语气词、喜欢分多条发、不说大道理"></textarea>
+          <label>回复规则</label>
+          <textarea id="responseRules" placeholder="例如：吃醋时先安抚；对方问未来要正面回答；晚上困了要说明原因"></textarea>
+          <label>禁忌</label>
+          <textarea id="forbiddenRules" placeholder="例如：不要说自己是 AI；不要官方腔；不要用某些称呼或句式"></textarea>
+        </div>
+        <div class="row">
+          <button id="analyze" class="warn">解析记录</button>
+          <button id="create" class="good">生成项目</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="stack">
+      <section>
+        <h2>解析结果</h2>
+        <div id="analysis" class="analysis">
+          <div class="metric"><strong>-</strong><span class="muted">消息总数</span></div>
+          <div class="metric"><strong>-</strong><span class="muted">目标消息</span></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>项目</h2>
+        <div id="projects" class="list"></div>
+      </section>
+    </div>
+
+    <div class="stack">
+      <section>
+        <h2>运行</h2>
+        <div id="message" class="message">正在读取状态...</div>
+        <div style="height: 10px"></div>
+        <div id="onebot" class="message"></div>
+      </section>
+
+      <section>
+        <h2>扫码</h2>
+        <div class="qr">
+          <img id="qrImg" alt="NapCat 登录二维码" />
+          <div>
+            <div id="qrState" class="muted">等待二维码</div>
+            <button id="refreshQr" style="margin-top: 8px">刷新二维码</button>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>日志</h2>
+        <pre id="logs"></pre>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let currentChatText = "";
+    let currentSourceName = "";
+    let lastAnalysis = null;
+    let selectedProjectSlug = "";
+
+    const busyButtons = ["saveApi", "startNapcat", "keepAwake", "refresh", "analyze", "create", "refreshQr", "login"].map($);
+
+    $("chatFile").addEventListener("change", async () => {
+      const file = $("chatFile").files[0];
+      if (!file) return;
+      currentSourceName = file.name;
+      currentChatText = await file.text();
+      $("chatText").value = currentChatText.slice(0, 12000);
+      $("message").textContent = `已读取 ${file.name}，${currentChatText.length} 个字符。`;
+    });
+    $("chatText").addEventListener("input", () => {
+      currentChatText = $("chatText").value;
+      if (!currentSourceName) currentSourceName = "pasted-chat.txt";
+    });
+
+    $("saveApi").onclick = () => post("/api/settings", {
+      provider: $("provider").value,
+      apiKey: $("apiKey").value,
+      deepseekBaseUrl: $("deepseekBaseUrl").value,
+      deepseekModel: $("deepseekModel").value,
+      openaiModel: $("openaiModel").value,
+      rememberKey: $("rememberKey").checked,
+    });
+    $("startNapcat").onclick = () => post("/api/napcat/start");
+    $("keepAwake").onclick = () => post("/api/power/keep-awake");
+    $("refresh").onclick = refresh;
+    $("refreshQr").onclick = refreshQr;
+    $("analyze").onclick = analyze;
+    $("create").onclick = createProject;
+    $("login").onclick = login;
+    $("accessPassword").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") login();
+    });
+
+    async function analyze() {
+      setBusy(true);
+      try {
+        const data = await jsonPost("/api/projects/analyze", baseProjectPayload());
+        if (!data.ok) throw new Error(data.error || "解析失败");
+        lastAnalysis = data.analysis;
+        fillSpeakerSuggestions(data.analysis);
+        renderAnalysis(data.analysis);
+        $("message").textContent = "解析完成。";
+      } catch (error) {
+        $("message").textContent = String(error.message || error);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function createProject() {
+      setBusy(true);
+      try {
+        const data = await jsonPost("/api/projects/create", baseProjectPayload());
+        if (!data.ok) throw new Error(data.error || "生成失败");
+        lastAnalysis = data.analysis;
+        selectedProjectSlug = data.project.slug;
+        renderAnalysis(data.analysis);
+        $("message").textContent = data.message || "项目已生成。";
+        await refresh();
+      } catch (error) {
+        $("message").textContent = String(error.message || error);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function baseProjectPayload() {
+      return {
+        sourceName: currentSourceName || "chat-export.txt",
+        chatText: currentChatText || $("chatText").value,
+        name: $("projectName").value,
+        slug: $("slug").value,
+        targetSpeaker: $("targetSpeaker").value,
+        counterpartSpeaker: $("counterpartSpeaker").value,
+        botQq: $("botQq").value,
+        allowedPrivateUserIds: $("allowedPrivateUserIds").value,
+        onebotWsUrl: $("onebotWsUrl").value,
+        characterNotes: $("characterNotes").value,
+        keyFacts: $("keyFacts").value,
+        relationshipNotes: $("relationshipNotes").value,
+        speakingStyle: $("speakingStyle").value,
+        responseRules: $("responseRules").value,
+        forbiddenRules: $("forbiddenRules").value,
+        overwrite: $("overwrite").checked,
+        provider: $("provider").value,
+        deepseekBaseUrl: $("deepseekBaseUrl").value,
+        deepseekModel: $("deepseekModel").value,
+        openaiModel: $("openaiModel").value,
+      };
+    }
+
+    async function post(url, body) {
+      setBusy(true);
+      try {
+        const data = await jsonPost(url, body || {});
+        $("message").textContent = data.message || data.error || JSON.stringify(data, null, 2);
+        await refresh();
+      } catch (error) {
+        $("message").textContent = String(error.message || error);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function jsonPost(url, body) {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body || {}),
+      });
+      const data = await res.json();
+      if (res.status === 401 && data.authRequired) {
+        showLogin(data.error);
+        throw new Error(data.error || "需要登录");
+      }
+      return data;
+    }
+
+    async function refresh() {
+      const res = await fetch("/api/status");
+      const status = await res.json();
+      if (res.status === 401 && status.authRequired) {
+        showLogin(status.error);
+        return;
+      }
+      hideLogin();
+      renderStatus(status);
+      if (selectedProjectSlug) loadLogs(selectedProjectSlug);
+    }
+
+    async function login() {
+      setBusy(true);
+      try {
+        const data = await jsonPost("/api/login", { password: $("accessPassword").value });
+        if (!data.ok) throw new Error(data.error || "登录失败");
+        $("loginMessage").textContent = data.message || "已登录";
+        $("accessPassword").value = "";
+        hideLogin();
+        await refresh();
+      } catch (error) {
+        showLogin(String(error.message || error));
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function showLogin(message) {
+      $("loginPanel").style.display = "block";
+      $("loginMessage").textContent = message || "";
+    }
+
+    function hideLogin() {
+      $("loginPanel").style.display = "none";
+      $("loginMessage").textContent = "";
+    }
+
+    function renderStatus(status) {
+      renderApi(status.apiSettings);
+      $("onebot").textContent = status.onebot?.listening
+        ? "OneBot：127.0.0.1:3001 已启动"
+        : "OneBot：127.0.0.1:3001 未启动";
+      $("qrState").textContent = status.qrcode?.exists
+        ? `二维码已生成：${new Date(status.qrcode.updatedAt).toLocaleString()}`
+        : "启动 NapCat 后这里会出现二维码";
+      refreshQr();
+      renderProjects(status.projects || []);
+    }
+
+    function renderApi(settings) {
+      if (!settings) return;
+      $("provider").value = settings.provider || "deepseek";
+      $("deepseekBaseUrl").value = settings.deepseekBaseUrl || "https://api.deepseek.com";
+      $("deepseekModel").value = settings.deepseekModel || "deepseek-v4-pro";
+      $("openaiModel").value = settings.openaiModel || "gpt-4.1-mini";
+      $("apiKey").placeholder = settings.keyReady ? settings.maskedKey || "已设置" : "sk-...";
+      $("rememberKey").checked = Boolean(settings.keySaved);
+    }
+
+    function renderAnalysis(analysis) {
+      if (!analysis) return;
+      $("analysis").innerHTML = `
+        <div class="metric"><strong>${analysis.totalMessages}</strong><span class="muted">消息总数</span></div>
+        <div class="metric"><strong>${analysis.targetMessageCount}</strong><span class="muted">目标消息</span></div>
+        <div class="metric"><strong>${esc(analysis.targetSpeaker || "-")}</strong><span class="muted">模拟昵称</span></div>
+        <div class="metric"><strong>${esc(analysis.counterpartSpeaker || "-")}</strong><span class="muted">你的昵称</span></div>
+        <div class="metric"><strong>${analysis.avgChars}</strong><span class="muted">平均字数</span></div>
+        <div class="metric"><strong>${analysis.targetMediaMessageCount}</strong><span class="muted">媒体消息</span></div>
+        <div class="metric" style="grid-column: 1 / -1">
+          <strong>${esc((analysis.topPhrases || []).slice(0, 6).map((item) => item.text).join(" / ") || "-")}</strong>
+          <span class="muted">高频短句</span>
+        </div>
+      `;
+    }
+
+    function fillSpeakerSuggestions(analysis) {
+      if (!$("targetSpeaker").value && analysis.targetSpeaker) $("targetSpeaker").value = analysis.targetSpeaker;
+      if (!$("counterpartSpeaker").value && analysis.counterpartSpeaker) $("counterpartSpeaker").value = analysis.counterpartSpeaker;
+      if (!$("projectName").value && analysis.targetSpeaker) $("projectName").value = analysis.targetSpeaker;
+    }
+
+    function renderProjects(projects) {
+      $("projects").innerHTML = projects.length ? projects.map((project) => `
+        <div class="project">
+          <div class="project-top">
+            <div>
+              <div class="project-title">${esc(project.name)}</div>
+              <div class="muted">${esc(project.slug)} · ${esc(project.targetSpeaker)} → ${esc((project.allowedPrivateUserIds || []).join(", "))}</div>
+            </div>
+            <span class="badge ${project.running ? "ok" : "bad"}">${project.running ? "运行中" : "未运行"}</span>
+          </div>
+          <div class="muted">bot QQ ${esc(project.botQq)} · ${project.messageCount || 0} 条 · ${esc(project.timeRange?.start || "")}</div>
+          <div class="row">
+            <button class="primary" onclick="startProject('${escAttr(project.slug)}')">启动</button>
+            <button class="danger" onclick="stopProject('${escAttr(project.slug)}')">停止</button>
+            <button onclick="loadLogs('${escAttr(project.slug)}')">日志</button>
+          </div>
+        </div>
+      `).join("") : `<div class="muted">还没有项目。</div>`;
+    }
+
+    async function startProject(slug) {
+      selectedProjectSlug = slug;
+      await post(`/api/projects/${encodeURIComponent(slug)}/start`);
+    }
+
+    async function stopProject(slug) {
+      selectedProjectSlug = slug;
+      await post(`/api/projects/${encodeURIComponent(slug)}/stop`);
+    }
+
+    async function loadLogs(slug) {
+      selectedProjectSlug = slug;
+      const res = await fetch(`/api/projects/${encodeURIComponent(slug)}/logs`);
+      const data = await res.json();
+      if (res.status === 401 && data.authRequired) {
+        showLogin(data.error);
+        return;
+      }
+      $("logs").textContent = [
+        `== ${slug} bot.log ==`,
+        data.bot || "(empty)",
+        "",
+        "== process.log ==",
+        data.process || "(empty)",
+      ].join("\n");
+    }
+
+    function refreshQr() {
+      $("qrImg").src = "/napcat-qrcode.png?t=" + Date.now();
+    }
+
+    function setBusy(value) {
+      busyButtons.forEach((button) => button.disabled = value);
+    }
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      }[ch]));
+    }
+
+    function escAttr(value) {
+      return esc(value).replace(/`/g, "&#96;");
+    }
+
+    refresh();
+    setInterval(refresh, 5000);
+  </script>
+</body>
+</html>

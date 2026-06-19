@@ -1,0 +1,48 @@
+# Runtime data and generated bots
+workspace/
+*.log
+logs/
+bot.log
+process.log
+
+# Secrets and local machine settings
+.env
+.env.*
+!.env.example
+api-settings.local.json
+process-state.json
+state.json
+*.local.json
+
+# Dependencies and build/cache output
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.cache/
+.tmp-*/
+tmp/
+temp/
+
+# QQ/NapCat private data if copied into this repository by mistake
+NapCat*/
+cache/
+qrcode.png
+*.db
+*.sqlite
+
+# Chat exports and generated private persona material
+*.txt
+!README.md
+!LICENSE.txt
+source/
+exes/
+skills/
+表情包/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
